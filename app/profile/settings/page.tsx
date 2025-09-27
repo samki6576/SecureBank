@@ -467,6 +467,7 @@ export default function SettingsPage() {
                 <p className="text-sm text-muted-foreground">Sign out of your account on this device</p>
               </div>
               <Button variant="destructive" onClick={handleSignOut}>
+                <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
               </Button>
             </div>
