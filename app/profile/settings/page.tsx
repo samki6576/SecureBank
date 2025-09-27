@@ -21,7 +21,8 @@ import {
   Edit,
   Trash2,
   Plus,
-  Download
+  Download,
+  LogOut
 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useAuth } from "@/components/firebase/auth-context"
