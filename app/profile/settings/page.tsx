@@ -445,10 +445,7 @@ export default function SettingsPage() {
                 <CardTitle>Data Management</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Button variant="outline" className="w-full">
-                  <Download className="h-4 w-4 mr-2" />
-                  Download My Data
-                </Button>
+                
                 <Button variant="outline" className="w-full">
                   <Trash2 className="h-4 w-4 mr-2" />
                   Delete Account
