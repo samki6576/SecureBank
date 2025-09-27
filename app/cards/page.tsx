@@ -4,9 +4,7 @@ import { AppLayout } from "@/components/app-layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Switch } from "@/components/ui/switch"
 import { 
-  CreditCard, 
   Plus, 
   Eye, 
   EyeOff, 
@@ -21,9 +19,10 @@ import { useAuth } from "@/components/firebase/auth-context"
 import { useRouter } from "next/navigation"
 import { fetchMockCards } from "@/mockApi"
 
+// FIXED CardData interface with optional properties
 interface CardData {
   id: string
-  type: string
+  type: 'debit' | 'credit'
   number: string
   holderName: string
   expiryDate: string
@@ -31,9 +30,11 @@ interface CardData {
   balance: number
   cardProvider: string
   isActive: boolean
-  spendingLimit: number
-  usedAmount: number
+  spendingLimit?: number
+  usedAmount?: number
+  creditLimit?: number
 }
+
 
 export default function CardsPage() {
   const [cards, setCards] = useState<CardData[]>([])
@@ -81,8 +82,27 @@ export default function CardsPage() {
     }
   }
 
-  const getCardTypeIcon = (type: string) => {
-    return type === 'credit' ? '💳' : '💳'
+  const getUsedPercentage = (card: CardData) => {
+    if (card.type === 'credit' && card.creditLimit && card.creditLimit > 0) {
+      return ((card.usedAmount || 0) / card.creditLimit) * 100
+    }
+    if (card.type === 'debit' && card.spendingLimit && card.spendingLimit > 0) {
+      return ((card.usedAmount || 0) / card.spendingLimit) * 100
+    }
+    return 0
+  }
+
+  const getLimitAmount = (card: CardData) => {
+    if (card.type === 'credit') return card.creditLimit || 0
+    return card.spendingLimit || 0
+  }
+
+  const getLimitLabel = (card: CardData) => {
+    return card.type === 'credit' ? 'Credit Limit' : 'Spending Limit'
+  }
+
+  const getUsedLabel = (card: CardData) => {
+    return card.type === 'credit' ? 'Credit Used' : 'Spending Used'
   }
 
   if (!user) return null
@@ -92,7 +112,7 @@ export default function CardsPage() {
       <div className="p-4 space-y-4 sm:space-y-6">
         {/* Header */}
         <div className="pt-4">
-          <h1 className="text-2xl font-bold text-foreground">Cards</h1>
+            <h1 className="text-2xl font-bold text-foreground">Cards</h1>
           <p className="text-muted-foreground">Manage your credit and debit cards</p>
         </div>
 
@@ -105,9 +125,9 @@ export default function CardsPage() {
                 <div className={`${getCardProviderColor(card.cardProvider)} text-white p-4 sm:p-6 relative`}>
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-2">
-                      <span className="text-2xl">{getCardTypeIcon(card.type)}</span>
+                      <span className="text-2xl">💳</span>
                       <span className="font-semibold">{card.cardProvider}</span>
-                    </div>
+              </div>
                     <div className="flex items-center gap-2">
                       <Badge variant={card.isActive ? "default" : "secondary"}>
                         {card.isActive ? "Active" : "Inactive"}
@@ -119,28 +139,28 @@ export default function CardsPage() {
                         onClick={() => toggleCardStatus(card.id)}
                       >
                         {card.isActive ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div>
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
                       <p className="text-white/80 text-sm">Card Number</p>
                       <p className="text-xl font-mono">
                         {showCardNumbers ? card.number : "•••• •••• •••• ••••"}
                       </p>
-                    </div>
-                    
+              </div>
+
                     <div className="flex justify-between items-end">
                       <div>
                         <p className="text-white/80 text-sm">Cardholder</p>
                         <p className="font-semibold">{card.holderName}</p>
                       </div>
-                      <div>
+                <div>
                         <p className="text-white/80 text-sm">Expires</p>
                         <p className="font-semibold">{card.expiryDate}</p>
-                      </div>
-                      <div>
+                </div>
+                <div>
                         <p className="text-white/80 text-sm">CVV</p>
                         <div className="flex items-center gap-2">
                           <p className="font-mono">
@@ -157,7 +177,7 @@ export default function CardsPage() {
                         </div>
                       </div>
                     </div>
-                  </div>
+                </div>
                 </div>
 
                 {/* Card Details */}
@@ -166,39 +186,39 @@ export default function CardsPage() {
                     <div>
                       <p className="text-sm text-muted-foreground">Available Balance</p>
                       <p className={`text-lg font-semibold ${
-                        (card.balance || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+                        card.balance >= 0 ? 'text-green-600' : 'text-red-600'
                       }`}>
-                        ${Math.abs(card.balance || 0).toFixed(2)}
+                        ${Math.abs(card.balance).toFixed(2)}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">
-                        {card.type === 'credit' ? 'Credit Limit' : 'Spending Limit'}
+                        {getLimitLabel(card)}
                       </p>
                       <p className="text-lg font-semibold">
-                        ${(card.spendingLimit || 0).toLocaleString()}
+                        ${getLimitAmount(card).toLocaleString()}
                       </p>
                     </div>
                   </div>
 
-                  {card.type === 'credit' && (
-                    <div>
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm text-muted-foreground">Credit Used</span>
-                        <span className="text-sm font-medium">
-                          ${(card.usedAmount || 0).toFixed(2)} / ${(card.spendingLimit || 0).toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-primary h-2 rounded-full" 
-                          style={{ 
-                            width: `${card.spendingLimit > 0 ? (card.usedAmount / card.spendingLimit) * 100 : 0}%` 
-                          }}
-                        ></div>
-                      </div>
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm text-muted-foreground">
+                        {getUsedLabel(card)}
+                      </span>
+                      <span className="text-sm font-medium">
+                        ${(card.usedAmount || 0).toFixed(2)} / ${getLimitAmount(card).toLocaleString()}
+                      </span>
                     </div>
-                  )}
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-primary h-2 rounded-full" 
+                        style={{ 
+                          width: `${Math.min(getUsedPercentage(card), 100)}%` 
+                        }}
+                      ></div>
+              </div>
+            </div>
 
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" className="flex-1">
@@ -211,8 +231,8 @@ export default function CardsPage() {
                     </Button>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+          </CardContent>
+        </Card>
           ))}
         </div>
 
@@ -249,7 +269,7 @@ export default function CardsPage() {
               <div className="text-center p-4 bg-muted rounded-lg">
                 <p className="text-2xl font-bold text-green-600">$2,450</p>
                 <p className="text-sm text-muted-foreground">Total Spending</p>
-              </div>
+                </div>
               <div className="text-center p-4 bg-muted rounded-lg">
                 <p className="text-2xl font-bold text-blue-600">$1,250</p>
                 <p className="text-sm text-muted-foreground">Available Credit</p>
@@ -259,7 +279,7 @@ export default function CardsPage() {
               <div className="text-center p-4 bg-muted rounded-lg">
                 <p className="text-2xl font-bold text-orange-600">12</p>
                 <p className="text-sm text-muted-foreground">Transactions</p>
-              </div>
+                </div>
               <div className="text-center p-4 bg-muted rounded-lg">
                 <p className="text-2xl font-bold text-purple-600">$89</p>
                 <p className="text-sm text-muted-foreground">Average Transaction</p>
