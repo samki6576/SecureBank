@@ -3,7 +3,6 @@ import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import { Analytics } from '@vercel/analytics/next'
 import { AuthProvider } from '@/components/firebase/auth-context'
-import { AppLayout } from '@/components/app-layout'
 import './globals.css'
 
 export const viewport: Viewport = {
