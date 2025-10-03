@@ -1,3 +1,6 @@
+"use client"
+
+import { useState } from "react"
 import { AppLayout } from "@/components/app-layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -5,6 +8,8 @@ import { Plus, ArrowUpRight, ArrowDownLeft, CreditCard } from "lucide-react"
 import Link from "next/link"
 
 export default function WalletPage() {
+  const [showBalance, setShowBalance] = useState(true)
+
   return (
     <AppLayout>
       <div className="p-4 space-y-6">
@@ -15,36 +20,26 @@ export default function WalletPage() {
         </div>
 
         {/* Balance Overview */}
-        <Card className="bg-gradient-to-r from-primary to-secondary text-primary-foreground">
+        <Card className="bg-primary text-primary-foreground">
           <CardContent className="p-6">
-            <div className="space-y-4">
-              <div>
-                <p className="text-primary-foreground/80 text-sm">Available Balance</p>
-                <p className="text-3xl font-bold">$12,450.80</p>
-              </div>
-              <div className="flex gap-3">
-                <Button
-                  asChild
-                  size="sm"
-                  className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground border-0"
-                >
-                  <Link href="/wallet/add-funds">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Funds
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  size="sm"
-                  variant="outline"
-                  className="bg-transparent border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10"
-                >
-                  <Link href="/transfers">
-                    <ArrowUpRight className="h-4 w-4 mr-2" />
-                    Send Money
-                  </Link>
-                </Button>
-              </div>
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-primary-foreground/80">Available Balance</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-primary-foreground hover:bg-primary-foreground/10"
+                onClick={() => setShowBalance(!showBalance)}
+              >
+                <span className="h-4 w-4 inline-block">
+                  {showBalance ? "👁️" : "🙈"}
+                </span>
+              </Button>
+            </div>
+            <div className="space-y-2">
+              <p className="text-3xl font-bold">
+                {showBalance ? `$${5000.0.toFixed(2)}` : "****"}
+              </p>
+              <p className="text-primary-foreground/80 text-sm">Account: ****1234</p>
             </div>
           </CardContent>
         </Card>
